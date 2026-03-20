@@ -26,8 +26,7 @@ Setelah environment berhasil diaktifkan dan seluruh library di dalam file requir
 ```bash
 streamlit run dashboard.py
 
-## 💡 Catatan Penting Sebelum Submit Ulang:
-1. **Pastikan file `requirements.txt` benar-benar ada** di dalam repositori GitHub kamu. Jika file itu tidak ada, *reviewer* tidak akan bisa melakukan `pip install -r requirements.txt`. Isi file tersebut biasanya berupa daftar library: `pandas`, `matplotlib`, `seaborn`, `streamlit`, dll.
-2. **Cek nama file dashboard kamu.** Di panduan tertulis `streamlit run dashboard.py`. Jika nama file Python kamu untuk dashboard bukan `dashboard.py` (misalnya `app.py` atau `main.py`), pastikan kamu mengubah teks di README tersebut menyesuaikan nama file aslimu ya! 
-
-Silakan salin kode di atas ke dalam file `README.md` kamu di GitHub, lalu *commit* perubahan tersebut. Semangat, tinggal selangkah lagi!
+### Mendownload Libary
+Untuk mendowload libary bisa menggunakan perintah sebagai berikut : 
+```bash
+pip install pandas numpy matplotlib seaborn streamlit
