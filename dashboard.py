@@ -1,13 +1,23 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 import streamlit as st
 
 day_df = pd.read_csv("day_clean.csv")
 hour_df = pd.read_csv("hour_clean.csv")
 
-
 day_df["dteday"] = pd.to_datetime(day_df["dteday"])
 hour_df["dteday"] = pd.to_datetime(hour_df["dteday"])
+
+urutan_hari = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+day_df["weekday_name"] = pd.Categorical(
+    day_df["weekday"].map({
+        0: "Sunday", 1: "Monday", 2: "Tuesday",
+        3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday"
+    }),
+    categories=urutan_hari,
+    ordered=True
+)
 
 st.sidebar.header("Filter Data")
 
@@ -19,17 +29,14 @@ date_range = st.sidebar.date_input(
     value=(min_date, max_date)
 )
 
-
 if len(date_range) != 2:
     st.warning("Silakan pilih rentang tanggal dengan benar")
     st.stop()
 
 start_date, end_date = date_range
 
-
 start_date = pd.to_datetime(start_date)
 end_date = pd.to_datetime(end_date)
-
 
 day_filtered = day_df[
     (day_df["dteday"] >= start_date) &
@@ -41,38 +48,58 @@ hour_filtered = hour_df[
     (hour_df["dteday"] <= end_date)
 ]
 
-
 st.title("🚲 Bike Sharing Dashboard")
-
 
 total_rentals = day_filtered["cnt"].sum()
 st.metric("Total Penyewaan", total_rentals)
 
-
 st.subheader("📊 Penyewaan Berdasarkan Hari")
 
-weekday_avg = day_filtered.groupby("weekday")["cnt"].mean()
+day_plot_data = day_filtered.groupby("weekday_name", observed=False)["cnt"].sum().reset_index()
 
-fig, ax = plt.subplots()
-ax.plot(weekday_avg.index, weekday_avg.values, marker='o')
-ax.set_xlabel("Hari (0=Min, 6=Sab)")
-ax.set_ylabel("Rata-rata Penyewaan")
-ax.set_xticks(range(7))
+max_cnt = day_plot_data["cnt"].max()
+colors = ["#1f77b4" if val == max_cnt else "#d3d3d3" for val in day_plot_data["cnt"]]
 
-st.pyplot(fig)
+fig_day, ax_day = plt.subplots(figsize=(10, 6))
 
+sns.barplot(
+    x="weekday_name", 
+    y="cnt", 
+    data=day_plot_data, 
+    palette=colors,
+    hue="weekday_name", 
+    legend=False,
+    ax=ax_day
+)
+
+plt.title(f"Total Penyewaan Sepeda per Hari\n(Periode: {start_date.strftime('%Y-%m-%d')} s/d {end_date.strftime('%Y-%m-%d')})", fontsize=16, fontweight='bold', pad=20)
+plt.xlabel(None) 
+plt.ylabel("Total Penyewaan", fontsize=12)
+
+for p in ax_day.patches:
+    ax_day.annotate(f"{int(p.get_height()):,}", 
+                (p.get_x() + p.get_width() / 2., p.get_height()), 
+                ha='center', va='center', 
+                xytext=(0, 8), 
+                textcoords='offset points',
+                fontsize=11, fontweight='bold', color='#333333')
+
+sns.despine()
+plt.grid(axis='y', linestyle='--', alpha=0.3)
+plt.tight_layout()
+
+st.pyplot(fig_day)
 
 st.subheader("⏰ Penyewaan Berdasarkan Jam")
 
 hour_avg = hour_filtered.groupby("hr")["cnt"].mean()
 
-fig, ax = plt.subplots()
-ax.plot(hour_avg.index, hour_avg.values, marker='o')
-ax.set_xlabel("Jam")
-ax.set_ylabel("Rata-rata Penyewaan")
-ax.set_xticks(range(24))
+fig_hour, ax_hour = plt.subplots()
+ax_hour.plot(hour_avg.index, hour_avg.values, marker='o')
+ax_hour.set_xlabel("Jam")
+ax_hour.set_ylabel("Rata-rata Penyewaan")
+ax_hour.set_xticks(range(24))
 
-st.pyplot(fig)
-
+st.pyplot(fig_hour)
 
 st.caption("Bike Sharing Dashboard 🚀")
